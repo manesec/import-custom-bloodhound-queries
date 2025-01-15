@@ -1,4 +1,5 @@
 import json
+import time
 import requests
 import argparse
 
@@ -22,14 +23,17 @@ def send_requests(parsed_queries, jwt, host, port):
             "name": name,
             "query": query
         }
-        try:
-            response = requests.post(f'http://{host}:{port}/api/v2/saved-queries', json=payload, headers=headers, verify=False)
-            if response.status_code == 201:
-                print(f"Successfully created query: '{name}'")
-            else:
-                print(f"Failed to create query: '{name}' with error code {response.status_code}")
-        except Exception as e:
-            print(f"Error occurred while sending request for '{name}': {str(e)}")
+        for x in range (3):
+            try:
+                response = requests.post(f'http://{host}:{port}/api/v2/saved-queries', json=payload, headers=headers, verify=False)
+                if response.status_code == 201 or response.status_code == 400:
+                    print(f"Successfully created query: '{name}'")
+                    break
+                else:
+                    print(f"Failed to create query: '{name}' with error code {response.status_code}")
+            except Exception as e:
+                print(f"Error occurred while sending request for '{name}': {str(e)}")
+            time.sleep(1)
 
 def main():
     parser = argparse.ArgumentParser(description='Import custom queries into BloodHound CE from a legacy BloodHound JSON file.', usage='python import-custom-bloodhound-queries.py --jwt eyJhbGciOiJIUz... [--host localhost] [--port 8080] [--file ./customqueries.json]')
